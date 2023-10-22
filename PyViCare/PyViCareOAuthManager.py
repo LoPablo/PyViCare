@@ -15,10 +15,10 @@ from PyViCare.PyViCareUtils import (PyViCareInvalidConfigurationError,
 logger = logging.getLogger('ViCare')
 logger.addHandler(logging.NullHandler())
 
-AUTHORIZE_URL = 'https://iam.viessmann.com/idp/v3/authorize'
-TOKEN_URL = 'https://iam.viessmann.com/idp/v3/token'
+AUTHORIZE_URL = 'https://iam.viessmann.com/idp/v2/authorize'
+TOKEN_URL = 'https://iam.viessmann.com/idp/v2/token'
 REDIRECT_URI = "vicare://oauth-callback/everest"
-VIESSMANN_SCOPE = ["IoT User"]
+VIESSMANN_SCOPE = ["Internal openid offline_access"]
 
 
 class ViCareOAuthManager(AbstractViCareOAuthManager):
