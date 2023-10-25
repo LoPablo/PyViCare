@@ -11,7 +11,10 @@ from PyViCare.PyViCareOilBoiler import OilBoiler
 from PyViCare.PyViCarePelletsBoiler import PelletsBoiler
 from PyViCare.PyViCareRadiatorActuator import RadiatorActuator
 from PyViCare.PyViCareRoomSensor import RoomSensor
+from PyViCare.PyViCareRoomControl import RoomControl
 from PyViCare.PyViCareElectricalEnergySystem import ElectricalEnergySystem
+from PyViCare.PyVicareFloorHeatingCircuitChannel import FloorHeatingCircuitChannel
+from PyViCare.PyVicareFloorHeatingCircuitDistributorBox import FloorHeatingCircuitDistributorBox
 
 logger = logging.getLogger('ViCare')
 logger.addHandler(logging.NullHandler())
@@ -50,6 +53,15 @@ class PyViCareDeviceConfig:
 
     def asRoomSensor(self):
         return RoomSensor(self.service)
+
+    def asRoomControl(self):
+        return RoomControl(self.service)
+
+    def asHeatingCircuitChannel(self):
+        return FloorHeatingCircuitChannel(self.service)
+
+    def asHeatingCircuitDistributorBox(self):
+        return FloorHeatingCircuitDistributorBox(self.service)
     
     def asElectricalEnergySystem(self):
         return ElectricalEnergySystem(self.service)
@@ -76,6 +88,9 @@ class PyViCareDeviceConfig:
             (self.asPelletsBoiler, r"Vitoligno|Ecotronic|VBC550P", []),
             (self.asRadiatorActuator, r"E3_RadiatorActuator", ["type:radiator"]),
             (self.asRoomSensor, r"E3_RoomSensor", ["type:climateSensor"]),
+            (self.asRoomControl, r"E3_RoomControl", []),
+            (self.asHeatingCircuitChannel, r"E3_FloorHeatingCircuitChannel", []),
+            (self.asHeatingCircuitDistributorBox, r"E3_FloorHeatingCircuitDistributionBox", []),
             (self.asElectricalEnergySystem, r"E3_HEMS", ["type:hems"]),
             (self.asElectricalEnergySystem, r"E3_TCU10_x07", ["type:tcu"]),
             (self.asElectricalEnergySystem, r"E3_EEBus", ["type:eebus"]),
