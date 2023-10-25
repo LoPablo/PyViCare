@@ -15,3 +15,11 @@ class RoomSensor(Device):
     @handleNotSupported
     def getHumidity(self):
         return self.service.getProperty("device.sensors.humidity")["properties"]["value"]["value"]
+
+    @handleNotSupported
+    def getBatteryPercentage(self):
+        return self.service.getProperty("device.power.battery")["properties"]["level"]["value"]
+
+    @handleNotSupported
+    def getLinkQualityIndicator(self):
+        return self.service.getProperty("device.zigbee.lqi")["properties"]["strength"]["value"]
