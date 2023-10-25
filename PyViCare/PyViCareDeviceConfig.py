@@ -97,7 +97,7 @@ class PyViCareDeviceConfig:
             (self.asRoomSensor, r"E3_RoomSensor", ["type:climateSensor"]),
             (self.asRoomControl, r"E3_RoomControl", []),
             (self.asHeatingCircuitChannel, r"E3_FloorHeatingCircuitChannel", []),
-            (self.asHeatingCircuitDistributorBox, r"E3_FloorHeatingCircuitDistributionBox", []),
+            (self.asHeatingCircuitDistributorBox, r"E3_FloorHeatingCircuitDistributorBox", []),
             (self.asElectricalEnergySystem, r"E3_HEMS", ["type:hems"]),
             (self.asElectricalEnergySystem, r"E3_TCU10_x07", ["type:tcu"]),
             (self.asElectricalEnergySystem, r"E3_EEBus", ["type:eebus"]),
