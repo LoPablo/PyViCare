@@ -14,6 +14,8 @@ from PyViCare.PyViCareRoomSensor import RoomSensor
 from PyViCare.PyViCareElectricalEnergySystem import ElectricalEnergySystem
 from PyViCare.PyViCareGateway import Gateway
 from PyViCare.PyViCareVentilationDevice import VentilationDevice
+from PyViCare.PyVicareFloorHeatingCircuitChannel import FloorHeatingCircuitChannel
+from PyViCare.PyVicareFloorHeatingCircuitDistributorBox import FloorHeatingCircuitDistributorBox
 
 logger = logging.getLogger('ViCare')
 logger.addHandler(logging.NullHandler())
@@ -53,6 +55,15 @@ class PyViCareDeviceConfig:
     def asRoomSensor(self):
         return RoomSensor(self.service)
 
+    def asRoomControl(self):
+        return RoomControl(self.service)
+
+    def asHeatingCircuitChannel(self):
+        return FloorHeatingCircuitChannel(self.service)
+
+    def asHeatingCircuitDistributorBox(self):
+        return FloorHeatingCircuitDistributorBox(self.service)
+
     def asElectricalEnergySystem(self):
         return ElectricalEnergySystem(self.service)
 
@@ -84,6 +95,13 @@ class PyViCareDeviceConfig:
             (self.asPelletsBoiler, r"Vitoligno|Ecotronic|VBC550P", []),
             (self.asRadiatorActuator, r"E3_RadiatorActuator", ["type:radiator"]),
             (self.asRoomSensor, r"E3_RoomSensor", ["type:climateSensor"]),
+            (self.asRoomControl, r"E3_RoomControl", []),
+            (self.asHeatingCircuitChannel, r"E3_FloorHeatingCircuitChannel", []),
+            (self.asHeatingCircuitDistributorBox, r"E3_FloorHeatingCircuitDistributionBox", []),
+            (self.asElectricalEnergySystem, r"E3_HEMS", ["type:hems"]),
+            (self.asElectricalEnergySystem, r"E3_TCU10_x07", ["type:tcu"]),
+            (self.asElectricalEnergySystem, r"E3_EEBus", ["type:eebus"]),
+            (self.asElectricalEnergySystem, r"E3_VitoCharge_03", ["type:energy_storage"])
             (self.asGateway, r"E3_TCU10_x07", ["type:gateway;TCU300"]),
             (self.asElectricalEnergySystem, r"E3_VitoCharge_03", ["type:ees"]),
             (self.asVentilation, r"E3_ViAir", ["type:ventilation"]),
@@ -92,10 +110,12 @@ class PyViCareDeviceConfig:
 
         for (creator_method, type_name, roles) in device_types:
             if re.search(type_name, self.device_model) or self.service.hasRoles(roles):
-                logger.info("detected %s %s", self.device_model, creator_method.__name__)
+                logger.info("detected %s %s" %
+                            (self.device_model, creator_method.__name__))
                 return creator_method()
 
-        logger.info("Could not auto detect %s. Use generic device.", self.device_model)
+        logger.info(
+            f"Could not auto detect {self.device_model}. Use generic device.")
         return self.asGeneric()
 
     def get_raw_json(self):
