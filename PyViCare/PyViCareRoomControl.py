@@ -60,6 +60,9 @@ class Room(Device):
     def getActiveProgram(self):
         return self.service.getProperty(f"rooms.{self.id}.operating.programs.active")["properties"]["value"]["value"]
 
+    @handleNotSupported
+    def getRoomStandby(self):
+        return self.service.getProperty(f"rooms.{self.id}.operating.programs.standby")["properties"]["active"]["value"]
     # @handleNotSupported
     # def getTemperatureProgramNormal(self):
     #     return self.service.getProperty("rooms." + self.id + ".temperature.levels.normal.perceived")["properties"]["temperature"][
