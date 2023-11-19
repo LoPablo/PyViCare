@@ -1,3 +1,4 @@
+import re
 from typing import Any, List
 
 from PyViCare.PyViCareDevice import Device
@@ -50,15 +51,19 @@ class Room(Device):
 
     @handleNotSupported
     def getCurrentDesiredTemperature(self):
-        active_program = self.getActiveProgram()
+        active_program = self.getActiveProgramWithoutState()
         if active_program in ['standby']:
             return None
-        return self.service.getProperty(f"rooms.{self.id}.operating.programs.{active_program}")[
+        return self.service.getProperty(f"rooms.{self.id}.temperature.levels.{active_program}.perceived")[
             "properties"]["temperature"]["value"]
 
     @handleNotSupported
     def getActiveProgram(self):
         return self.service.getProperty(f"rooms.{self.id}.operating.programs.active")["properties"]["value"]["value"]
+
+    @handleNotSupported
+    def getActiveProgramWithoutState(self):
+        return re.findall(".[^A-Z]*",self.getActiveProgram())[0]
 
     @handleNotSupported
     def getRoomStandby(self):
