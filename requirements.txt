@@ -4,3 +4,6 @@ types-requests
 isort
 twine
 build
+python-socketio
+aiohttp
+socketio

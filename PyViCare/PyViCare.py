@@ -8,15 +8,22 @@ from PyViCare.PyViCareDeviceConfig import PyViCareDeviceConfig
 from PyViCare.PyViCareOAuthManager import ViCareOAuthManager
 from PyViCare.PyViCareService import ViCareDeviceAccessor, ViCareService
 from PyViCare.PyViCareUtils import PyViCareInvalidDataError
+from PyViCare.PyViCareWebsocketManager import LiveUpdateManager
 
 logger = logging.getLogger('ViCare')
 logger.addHandler(logging.NullHandler())
+
+""""Viessmann ViCare API Python tools"""
 
 
 class PyViCare:
     """"Viessmann ViCare API Python tools"""
     def __init__(self) -> None:
         self.cacheDuration = 60
+
+    async def subscribeToLiveUpdate(self):
+        self.websocketManager = LiveUpdateManager(self.oauth_manager);
+        await self.websocketManager.subscribeToLiveUpdates();
 
     def setCacheDuration(self, cache_duration):
         self.cacheDuration = int(cache_duration)
@@ -52,14 +59,14 @@ class PyViCare:
         for installation in self.installations:
             for gateway in installation.gateways:
                 for device in gateway.devices:
-                    if device.deviceType not in ["heating", "zigbee", "vitoconnect", "electricityStorage", "tcu", "ventilation"]:
+                    if device.deviceType not in ["roomControl, ""heating", "zigbee", "vitoconnect", "electricityStorage","hems", "tcu", "ventilation"]:
                         continue  # we are only interested in heating, photovoltaic, electricityStorage, and ventilation devices
 
                     accessor = ViCareDeviceAccessor(
                         installation.id, gateway.serial, device.id)
                     service = self.__buildService(accessor, device.roles)
 
-                    logger.info("Device found: %s", device.modelId)
+                    logger.info(f"Device found: {device.modelId}")
 
                     yield PyViCareDeviceConfig(service, device.id, device.modelId, device.status)
 
@@ -77,4 +84,5 @@ def Wrap(v):
         return DictWrap(v)
     if isinstance(v, str) and len(v) == 24 and v[23] == 'Z' and v[10] == 'T':
         return datetime.strptime(v, '%Y-%m-%dT%H:%M:%S.%f%z')
-    return v
+    else:
+        return v

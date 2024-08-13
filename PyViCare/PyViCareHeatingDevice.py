@@ -4,6 +4,7 @@ from typing import Any, List, Optional
 from PyViCare.PyViCareDevice import Device
 from PyViCare.PyViCareHeatCurveCalculation import (
     heat_curve_formular_variant1, heat_curve_formular_variant2)
+from PyViCare.PyViCareService import ViCareService
 from PyViCare.PyViCareUtils import (VICARE_DAYS,
                                     PyViCareNotSupportedFeatureError,
                                     ViCareTimer, handleAPICommandErrors,
@@ -13,8 +14,8 @@ from PyViCare.PyViCareUtils import (VICARE_DAYS,
 VICARE_DHW_TEMP2 = "temp-2"
 
 
-def all_set(_list: List[Any]) -> bool:
-    return all(v is not None for v in _list)
+def all_set(list: List[Any]) -> bool:
+    return all(v is not None for v in list)
 
 
 def get_available_burners(service):
@@ -35,6 +36,13 @@ class HeatingDevice(Device):
     The authentication is done through OAuth2.
     Note that currently, a new token is generated for each run.
     """
+
+    def __init__(self, service: ViCareService) -> None:
+        self.service = service
+
+    @handleNotSupported
+    def getSerial(self):
+        return self.service.getProperty("device.serial")["properties"]["value"]["value"]
 
     @property
     def circuits(self) -> List[Any]:
@@ -664,7 +672,7 @@ class HeatingCircuit(HeatingDeviceWithComponent):
             shift = self.getHeatingCurveShift()
             slope = self.getHeatingCurveSlope()
 
-        if not all_set([inside, outside, shift, slope]):
+        if (not all_set([inside, outside, shift, slope])):
             return None
 
         max_value = None
@@ -676,7 +684,7 @@ class HeatingCircuit(HeatingDeviceWithComponent):
         if outside is None or inside is None:
             return None
 
-        delta_outside_inside = outside - inside
+        delta_outside_inside = (outside - inside)
         target_supply = self.device.get_heat_curve_formular()(delta_outside_inside, inside, shift, slope)
 
         if all_set([min_value, max_value]):

@@ -1,4 +1,7 @@
 import logging
+import socketio
+import json
+
 from abc import abstractclassmethod
 from typing import Any
 
@@ -14,6 +17,12 @@ logger = logging.getLogger('ViCare')
 logger.addHandler(logging.NullHandler())
 
 API_BASE_URL = 'https://api.viessmann.com/iot/v1'
+LIVEUPDATE_REQUEST_URL = 'https://api.viessmann.com/live-updates/v1/iot'
+TRANSPORT = 'websocket'
+
+SUBSCRIPTION_BASE = {
+    "subscriptions": []
+}
 
 
 class AbstractViCareOAuthManager:
@@ -31,11 +40,41 @@ class AbstractViCareOAuthManager:
     def renewToken(self) -> None:
         return
 
+    async def subscribe_to_live_updates(self):
+        response = self._oAuthManager.post_raw(LIVEUPDATE_REQUEST_URL, json.dumps(self._subscriptions))
+        if response is not None:
+            await self.establish_websocket_connection(response)
+
+    async def establish_websocket_connection(self, response):
+        sio = socketio.AsyncClient()
+
+        self.socket_id = response['id']
+        await sio.connect(response['url'], transports=['websocket'], socketio_path=response['path'],
+                          namespaces=response['namespace'])
+
+        @sio.on('connect', namespace=response['namespace'])
+        async def connect():
+            print('connection established')
+
+        @sio.on('feature', namespace=response['namespace'])
+        def feature_changed(data):
+            print(data)
+
+        @sio.on('gateway-aggregated-status-changed', namespace=response['namespace'])
+        def gateway_aggregated_status_changed(data):
+            print(data)
+
+        @sio.event
+        async def disconnect():
+            print('disconnected from server')
+
+        await sio.wait()
+
     def get(self, url: str) -> Any:
         try:
             logger.debug(self.__oauth)
             response = self.__oauth.get(f"{API_BASE_URL}{url}", timeout=31).json()
-            logger.debug("Response to get request: %s", response)
+            logger.debug(f"Response to get request: {response}")
             self.__handle_expired_token(response)
             self.__handle_rate_limit(response)
             self.__handle_server_error(response)
@@ -69,25 +108,30 @@ class AbstractViCareOAuthManager:
         if ("statusCode" in response and response["statusCode"] >= 400):
             raise PyViCareCommandError(response)
 
+
+
     def post(self, url, data) -> Any:
         """POST URL using OAuth session. Automatically renew the token if needed
-        Parameters
-        ----------
-        url : str
-            URL to get
-        data : str
-            Data to post
+            Parameters
+            ----------
+            url : str
+                URL to get
+            data : str
+                Data to post
 
-        Returns
-        -------
-        result: json
-            json representation of the answer
-        """
+            Returns
+            -------
+            result: json
+                json representation of the answer
+            """
+        self.post_raw(f"{API_BASE_URL}{url}", data)
+
+    def post_raw(self, url, data) -> Any:
         headers = {"Content-Type": "application/json",
                    "Accept": "application/vnd.siren+json"}
         try:
             response = self.__oauth.post(
-                f"{API_BASE_URL}{url}", data, headers=headers).json()
+                f"{url}", data, headers=headers).json()
             self.__handle_expired_token(response)
             self.__handle_rate_limit(response)
             self.__handle_command_error(response)

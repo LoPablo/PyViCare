@@ -13,7 +13,7 @@ def readFeature(entities, property_name):
     feature = next(
         (f for f in entities if f["feature"] == property_name), None)
 
-    if feature is None:
+    if (feature is None):
         raise PyViCareNotSupportedFeatureError(property_name)
 
     return feature
@@ -27,14 +27,32 @@ def buildSetPropertyUrl(accessor, property_name, action):
     return f'/features/installations/{accessor.id}/gateways/{accessor.serial}/devices/{accessor.device_id}/features/{property_name}/commands/{action}'
 
 
+def buildGetPropertyUrl(accessor, property_name):
+    return f'/features/installations/{accessor.id}/gateways/{accessor.serial}/devices/{accessor.device_id}/features/{property_name}'
+
+def buildLiveUpdateFeatureEntry(accessor):
+    return f'{{"id":"{accessor.id}","type":"device-features","gatewayId":"{accessor.serial}"}}'
+
 class ViCareDeviceAccessor:
     def __init__(self, _id: int, serial: str, device_id: str) -> None:
         self.id = _id
         self.serial = serial
         self.device_id = device_id
 
+class ViCareServiceObserver:
 
+    _propertyName : str
+
+    def __init__(self, propertyName:str):
+        self._propertyName = propertyName
+
+    def getPropertyName(self):
+        return self._propertyName
+    def updatesProperty(self, property_name: str, data: Any) -> None:
+        pass
 class ViCareService:
+
+    _observers : List[ViCareServiceObserver]
     def __init__(self, oauth_manager: AbstractViCareOAuthManager, accessor: ViCareDeviceAccessor, roles: List[str]) -> None:
         self.oauth_manager = oauth_manager
         self.accessor = accessor
@@ -62,6 +80,15 @@ class ViCareService:
 
         post_data = data if isinstance(data, str) else json.dumps(data)
         return self.oauth_manager.post(url, post_data)
+
+    def subscribeToLiveUpdatesForProperty(self, oberver : ViCareServiceObserver, property_name: str):
+        self._observers.append(oberver)
+
+    def informObserver(self, property_name: str, data: Any):
+        for observer in self._observers:
+            if observer.getPropertyName().equals(property_name):
+                observer.updatesProperty(property_name, data)
+
 
     def fetch_all_features(self) -> Any:
         url = f'/features/installations/{self.accessor.id}/gateways/{self.accessor.serial}/devices/{self.accessor.device_id}/features/'

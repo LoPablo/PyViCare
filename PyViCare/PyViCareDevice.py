@@ -2,6 +2,7 @@ from PyViCare.PyViCareService import ViCareService
 from PyViCare.PyViCareUtils import handleNotSupported
 
 
+
 class Device:
     """This is the base class for all simple devices.
     This class connects to the Viessmann ViCare API.
@@ -15,3 +16,11 @@ class Device:
     @handleNotSupported
     def getSerial(self):
         return self.service.getProperty("device.serial")["properties"]["value"]["value"]
+
+    @handleNotSupported
+    def getGatewayId(self):
+        return self.service.accessor.serial
+
+    def getId(self):
+        return self.service.accessor.device_id
+
