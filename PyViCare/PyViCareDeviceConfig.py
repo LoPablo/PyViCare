@@ -10,7 +10,6 @@ from PyViCare.PyViCareHybrid import Hybrid
 from PyViCare.PyViCareOilBoiler import OilBoiler
 from PyViCare.PyViCarePelletsBoiler import PelletsBoiler
 from PyViCare.PyViCareRadiatorActuator import RadiatorActuator
-from PyViCare.PyViCareRoomControl import RoomControl
 from PyViCare.PyViCareRoomSensor import RoomSensor
 from PyViCare.PyViCareElectricalEnergySystem import ElectricalEnergySystem
 from PyViCare.PyViCareGateway import Gateway

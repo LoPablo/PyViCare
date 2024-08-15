@@ -42,7 +42,8 @@ class PyViCare:
     def __buildService(self, accessor, roles):
         if self.cacheDuration > 0:
             return ViCareCachedService(self.oauth_manager, accessor, roles, self.cacheDuration)
-        return ViCareService(self.oauth_manager, accessor, roles)
+        else:
+            return ViCareService(self.oauth_manager, accessor, roles)
 
     def __loadInstallations(self):
         installations = self.oauth_manager.get(
@@ -66,6 +67,7 @@ class PyViCare:
                         installation.id, gateway.serial, device.id)
                     service = self.__buildService(accessor, device.roles)
 
+                    logger.info(f"Device found: {device.modelId}")
 
                     yield PyViCareDeviceConfig(service, device.id, device.modelId, device.status)
 
