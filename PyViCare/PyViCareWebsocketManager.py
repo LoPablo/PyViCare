@@ -59,14 +59,15 @@ class LiveUpdateManager():
         def feature_changed(data):
 
             feature = data['feature']
-            device_id = feature['deviceId']
-            updated_feature_name = feature['feature']
-            properties = feature['properties']
-            for device in self._subscribed_devices:
-                if device_id == device.getId():
-                    if device.service.hasPropertyObserver(updated_feature_name):
-                        print('found property observer')
-                        device.service.updateProperty(updated_feature_name, properties)
+            if feature is not None and "deviceID" in feature:
+                device_id = feature['deviceId']
+                updated_feature_name = feature['feature']
+                properties = feature['properties']
+                for device in self._subscribed_devices:
+                    if device_id == device.getId():
+                        if device.service.hasPropertyObserver(updated_feature_name):
+                            print('found property observer')
+                            device.service.updateProperty(updated_feature_name, properties)
 
         @sio.on('message', namespace=response['namespace'])
         def message_changed(data):
