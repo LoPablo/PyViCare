@@ -18,6 +18,7 @@ logger.addHandler(logging.NullHandler())
 
 API_BASE_URL = 'https://api.viessmann.com/iot/v1'
 LIVEUPDATE_REQUEST_URL = 'https://api.viessmann.com/live-updates/v1/iot'
+WSS_URL = "wss://api.viessmann.com/live-updates/v1/connect/?id="
 TRANSPORT = 'websocket'
 
 SUBSCRIPTION_BASE = {
@@ -49,7 +50,7 @@ class AbstractViCareOAuthManager:
         sio = socketio.AsyncClient()
 
         self.socket_id = response['id']
-        await sio.connect(response['url'], transports=['websocket'], socketio_path=response['path'],
+        await sio.connect(WSS_URL + self.socket_id, transports=['websocket'], socketio_path=response['path'],
                           namespaces=response['namespace'])
 
         @sio.on('connect', namespace=response['namespace'])

@@ -30,43 +30,36 @@ def buildSetPropertyUrl(accessor, property_name, action):
 def buildGetPropertyUrl(accessor, property_name):
     return f'/features/installations/{accessor.id}/gateways/{accessor.serial}/devices/{accessor.device_id}/features/{property_name}'
 
-def buildLiveUpdateFeatureEntry(accessor):
-    return f'{{"id":"{accessor.id}","type":"device-features","gatewayId":"{accessor.serial}"}}'
-
 class ViCareDeviceAccessor:
     def __init__(self, _id: int, serial: str, device_id: str) -> None:
         self.id = _id
         self.serial = serial
         self.device_id = device_id
 
-class ViCareServiceObserver:
-
-    _propertyName : str
-
-    def __init__(self, propertyName:str):
-        self._propertyName = propertyName
-
-    def getPropertyName(self):
-        return self._propertyName
-    def updatesProperty(self, property_name: str, data: Any) -> None:
-        pass
 class ViCareService:
-
-    _observers : List[ViCareServiceObserver]
     def __init__(self, oauth_manager: AbstractViCareOAuthManager, accessor: ViCareDeviceAccessor, roles: List[str]) -> None:
         self.oauth_manager = oauth_manager
         self.accessor = accessor
         self.roles = roles
+        self._observers = {}
 
     def getProperty(self, property_name: str) -> Any:
         url = self.buildGetPropertyUrl(property_name)
         return self.oauth_manager.get(url)
 
+    def hasPropertyObserver(self, property_name: str) -> bool:
+        return property_name in self._observers
+
+    def updateProperty(self, property_name: str, data: Any) -> None:
+        self._informObserver(property_name, data)
+
+    def _informObserver(self, property_name: str, data: Any):
+        self._observers[property_name](property_name,data)
+
     def buildGetPropertyUrl(self, property_name):
         if self._isGateway():
             return f'/features/installations/{self.accessor.id}/gateways/{self.accessor.serial}/features/{property_name}'
         return f'/features/installations/{self.accessor.id}/gateways/{self.accessor.serial}/devices/{self.accessor.device_id}/features/{property_name}'
-
 
     def hasRoles(self, requested_roles) -> bool:
         return hasRoles(requested_roles, self.roles)
@@ -81,14 +74,8 @@ class ViCareService:
         post_data = data if isinstance(data, str) else json.dumps(data)
         return self.oauth_manager.post(url, post_data)
 
-    def subscribeToLiveUpdatesForProperty(self, oberver : ViCareServiceObserver, property_name: str):
-        self._observers.append(oberver)
-
-    def informObserver(self, property_name: str, data: Any):
-        for observer in self._observers:
-            if observer.getPropertyName().equals(property_name):
-                observer.updatesProperty(property_name, data)
-
+    def subscribeToLiveUpdatesForProperty(self, callback, property_name: str):
+        self._observers[property_name] = callback
 
     def fetch_all_features(self) -> Any:
         url = f'/features/installations/{self.accessor.id}/gateways/{self.accessor.serial}/devices/{self.accessor.device_id}/features/'

@@ -59,14 +59,13 @@ class PyViCare:
         for installation in self.installations:
             for gateway in installation.gateways:
                 for device in gateway.devices:
-                    if device.deviceType not in ["roomControl, ""heating", "zigbee", "vitoconnect", "electricityStorage","hems", "tcu", "ventilation"]:
+                    if device.deviceType not in ["roomControl", "heating", "zigbee", "vitoconnect", "electricityStorage","hems", "tcu", "ventilation"]:
                         continue  # we are only interested in heating, photovoltaic, electricityStorage, and ventilation devices
 
                     accessor = ViCareDeviceAccessor(
                         installation.id, gateway.serial, device.id)
                     service = self.__buildService(accessor, device.roles)
 
-                    logger.info(f"Device found: {device.modelId}")
 
                     yield PyViCareDeviceConfig(service, device.id, device.modelId, device.status)
 
@@ -84,5 +83,4 @@ def Wrap(v):
         return DictWrap(v)
     if isinstance(v, str) and len(v) == 24 and v[23] == 'Z' and v[10] == 'T':
         return datetime.strptime(v, '%Y-%m-%dT%H:%M:%S.%f%z')
-    else:
-        return v
+    return v

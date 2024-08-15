@@ -6,4 +6,3 @@ twine
 build
 python-socketio
 aiohttp
-socketio

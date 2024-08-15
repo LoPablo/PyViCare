@@ -24,3 +24,8 @@ class Device:
     def getId(self):
         return self.service.accessor.device_id
 
+    def getLiveUpdateSubscriptionString(self):
+        return [{"id": self.getId(), "type": "device-features", "gatewayId": self.getGatewayId(), "version": "2"}]
+
+    def getService(self) -> ViCareService:
+        return self.service

@@ -1,40 +1,41 @@
 import logging
 import json
-import asyncio
 import socketio
 from PyViCare.PyViCareAbstractOAuthManager import AbstractViCareOAuthManager
+from PyViCare.PyViCareDevice import Device
 
 logger = logging.getLogger('ViCare')
 logger.addHandler(logging.NullHandler())
 
 LIVEUPDATE_REQUEST_URL = 'https://api.viessmann.com/live-updates/v1/iot'
+WSS_URL = "wss://api.viessmann.com/live-updates/v1/connect/"
 TRANSPORT = 'websocket'
-DUMMY_SUBSCRIPTION = '{"subscriptions":[{"id":"HEMS","type":"device-features","gatewayId":"7736172106234225"},{"id":"0","type":"device-features","gatewayId":"7736172106234225"},{"id":"7736172106234225","type":"gateway-features"},{"id":"RoomControl-1","type":"device-features","gatewayId":"7952592000729225"}]}'
-
-SUBSCRIPTION_BASE = {
-    "subscriptions": []
-}
+SUBSCRIPTION_BASE = {"subscriptions": []}
 
 
 class LiveUpdateManager():
-
     _subscriptions = SUBSCRIPTION_BASE
+
     def __init__(self, o_auth_manager: AbstractViCareOAuthManager):
         self._oAuthManager = o_auth_manager
+        self._subscribed_devices = []
 
-    async def addToSubscription(self, id : str, gateway_id : str, property_name : str):
-        self._subscriptions.get("subscriptions").append({
-            "id" : id,
-            "type" : "device-features",
-            "gatewayId" : gateway_id
-        })
 
+    @property
+    def subscriptions(self):
+        return self._subscriptions
+
+    def addToSubscription(self, device : Device):
+        self._subscribed_devices.append(device)
+        newSubscrption = device.getLiveUpdateSubscriptionString()
+        for sub in newSubscrption:
+            self._subscriptions.get("subscriptions").append(sub)
 
     async def subscribeToLiveUpdates(self):
-        response = self._oAuthManager.post_raw(LIVEUPDATE_REQUEST_URL, json.dumps(self._subscriptions))
+        response = self._oAuthManager.post_raw(LIVEUPDATE_REQUEST_URL, json.dumps(self._subscriptions, separators=(',', ':')))
         if response is not None:
+            print(response)
             await self.establishWebsocketConnection(response)
-
 
     async def renewWebsocketConnection(self):
         return
@@ -46,12 +47,29 @@ class LiveUpdateManager():
         await sio.connect(response['url'], transports=['websocket'], socketio_path=response['path'],
                           namespaces=response['namespace'])
 
+        @sio.event
+        def connect():
+            logger.info('connected to server')
+
         @sio.on('connect', namespace=response['namespace'])
         async def connect():
             print('connection established')
 
         @sio.on('feature', namespace=response['namespace'])
         def feature_changed(data):
+
+            feature = data['feature']
+            device_id = feature['deviceId']
+            updated_feature_name = feature['feature']
+            properties = feature['properties']
+            for device in self._subscribed_devices:
+                if device_id == device.getId():
+                    if device.service.hasPropertyObserver(updated_feature_name):
+                        print('found property observer')
+                        device.service.updateProperty(updated_feature_name, properties)
+
+        @sio.on('message', namespace=response['namespace'])
+        def message_changed(data):
             print(data)
 
         @sio.on('gateway-aggregated-status-changed', namespace=response['namespace'])

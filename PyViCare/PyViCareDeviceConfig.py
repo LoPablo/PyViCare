@@ -10,6 +10,7 @@ from PyViCare.PyViCareHybrid import Hybrid
 from PyViCare.PyViCareOilBoiler import OilBoiler
 from PyViCare.PyViCarePelletsBoiler import PelletsBoiler
 from PyViCare.PyViCareRadiatorActuator import RadiatorActuator
+from PyViCare.PyViCareRoomControl import RoomControl
 from PyViCare.PyViCareRoomSensor import RoomSensor
 from PyViCare.PyViCareElectricalEnergySystem import ElectricalEnergySystem
 from PyViCare.PyViCareGateway import Gateway
@@ -95,13 +96,12 @@ class PyViCareDeviceConfig:
             (self.asPelletsBoiler, r"Vitoligno|Ecotronic|VBC550P", []),
             (self.asRadiatorActuator, r"E3_RadiatorActuator", ["type:radiator"]),
             (self.asRoomSensor, r"E3_RoomSensor", ["type:climateSensor"]),
-            (self.asRoomControl, r"E3_RoomControl", []),
+            (self.asRoomControl, r"E3_RoomControl", ["type:roomControl"]),
             (self.asHeatingCircuitChannel, r"E3_FloorHeatingCircuitChannel", []),
             (self.asHeatingCircuitDistributorBox, r"E3_FloorHeatingCircuitDistributorBox", []),
             (self.asElectricalEnergySystem, r"E3_HEMS", ["type:hems"]),
             (self.asElectricalEnergySystem, r"E3_TCU10_x07", ["type:tcu"]),
-            (self.asElectricalEnergySystem, r"E3_EEBus", ["type:eebus"]),
-            (self.asElectricalEnergySystem, r"E3_VitoCharge_03", ["type:energy_storage"])
+            (self.asElectricalEnergySystem, r"E3_VitoCharge_03", ["type:energy_storage"]),
             (self.asGateway, r"E3_TCU10_x07", ["type:gateway;TCU300"]),
             (self.asElectricalEnergySystem, r"E3_VitoCharge_03", ["type:ees"]),
             (self.asVentilation, r"E3_ViAir", ["type:ventilation"]),

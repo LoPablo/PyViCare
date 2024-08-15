@@ -11,3 +11,7 @@ class Gateway(Device):
     @handleNotSupported
     def getWifiSignalStrength(self):
         return self.service.getProperty("gateway.wifi")["properties"]["strength"]["value"]
+
+    def getLiveUpdateSubscriptionString(self):
+        return [{"id": self.getGatewayId(), "type": "gateway-features", "version": "2"}, {"id": self.getId(), "type": "device-features", "gatewayId": self.getGatewayId(), "version": "2"}]
+
