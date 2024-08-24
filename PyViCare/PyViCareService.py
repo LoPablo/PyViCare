@@ -50,11 +50,13 @@ class ViCareService:
     def hasPropertyObserver(self, property_name: str) -> bool:
         return property_name in self._observers
 
-    def updateProperty(self, property_name: str, data: Any) -> None:
-        self._informObserver(property_name, data)
+    def updateProperty(self, device_id : str, property_name: str, data: Any) -> None:
+        self._informObserver(device_id, property_name, data)
 
-    def _informObserver(self, property_name: str, data: Any):
-        self._observers[property_name](property_name,data)
+    def _informObserver(self, device_id : str, property_name: str, data: Any):
+        if property_name in self._observers:
+           for observer in self._observers[property_name]:
+             observer(device_id, property_name,data)
 
     def buildGetPropertyUrl(self, property_name):
         if self._isGateway():
@@ -75,7 +77,9 @@ class ViCareService:
         return self.oauth_manager.post(url, post_data)
 
     def subscribeToLiveUpdatesForProperty(self, callback, property_name: str):
-        self._observers[property_name] = callback
+        if property_name not in self._observers:
+            self._observers[property_name] = []
+        self._observers[property_name].append(callback);
 
     def fetch_all_features(self) -> Any:
         url = f'/features/installations/{self.accessor.id}/gateways/{self.accessor.serial}/devices/{self.accessor.device_id}/features/'
